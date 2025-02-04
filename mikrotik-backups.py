@@ -182,18 +182,18 @@ def step2_main_job(name,host,port,user,auth_item,usermanager,cloudbackup,cleanUM
         text = f"Creating backup files..."
         logging.info(text)
         print(text)
-        commands = f"/export file={name}-{currDate} show-sensitive; "
-        commands += f"/log/warning \"{SCRIPT_NAME}: Created plain text backup\"; "
-        commands += f"/system/backup save name={name}-{currDate} password={BCKP_ENCR_PASS}; "
-        commands += f"/log/warning \"{SCRIPT_NAME}: Created encrypted full backup\"; "
+        commands = f"/export file={name}-{currDate} show-sensitive; delay 1; "
+        commands += f"/log/warning \"{SCRIPT_NAME}: Created plain text backup\"; delay 1; "
+        commands += f"/system/backup save name={name}-{currDate} password={BCKP_ENCR_PASS}; delay 1; "
+        commands += f"/log/warning \"{SCRIPT_NAME}: Created encrypted full backup\"; delay 1;"
         if cloudbackup:
             text = f"Creating backup in Mikrotik cloud..."
             logging.info(text)
             print(text)
-            commands += f"/system/backup/cloud/upload-file replace=[find] password={BCKP_ENCR_PASS} action=create-and-upload; "
-            commands += f"/log/warning \"{SCRIPT_NAME}: Cloud backup created\"; "
+            commands += f"/system/backup/cloud/upload-file replace=[find] password={BCKP_ENCR_PASS} action=create-and-upload; delay 3; "
+            commands += f"/log/warning \"{SCRIPT_NAME}: Cloud backup created\"; delay 1; "
         client.exec_command(commands)
-        time.sleep(2)
+        time.sleep(5)
         #Now downloading newly created files from the device
         folderName = datetime.now().strftime('%d.%m.%Y')
         fullBackupPath = os.path.join(BCKP_FOLDER,folderName)
@@ -211,18 +211,18 @@ def step2_main_job(name,host,port,user,auth_item,usermanager,cloudbackup,cleanUM
         text = f"Removing {name}-{currDate}.rsc and {name}-{currDate}.backup files..."
         print(text)
         logging.info(text)
-        commands = f"/file/remove {name}-{currDate}.rsc; "
-        commands += f"/log/warning \"{SCRIPT_NAME}: {name}-{currDate}.rsc deleted\"; "
-        commands += f"/file/remove {name}-{currDate}.backup; "
-        commands += f"/log/warning \"{SCRIPT_NAME}: {name}-{currDate}.backup deleted\"; "
+        commands = f"/file/remove {name}-{currDate}.rsc; delay 1; "
+        commands += f"/log/warning \"{SCRIPT_NAME}: {name}-{currDate}.rsc deleted\"; delay 1; "
+        commands += f"/file/remove {name}-{currDate}.backup; delay 1; "
+        commands += f"/log/warning \"{SCRIPT_NAME}: {name}-{currDate}.backup deleted\"; delay 1; "
         client.exec_command(commands)
-        time.sleep(2)
+        time.sleep(5)
         #check is UserManager downloading is enabled.
         if usermanager:
             text = f"Processing UserManager backups..."
             print(text)
             logging.info(text)
-            commands = f"/user-manager/database/save name=userman.db overwrite=yes"
+            commands = f"/user-manager/database/save name=userman.db overwrite=yes; delay 1;"
             client.exec_command(commands)
             sftp = client.open_sftp()
             text = f"Downloading userman.db file..."
