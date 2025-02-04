@@ -31,9 +31,9 @@ def generate_default_config():
                 "Password": "",
                 "Port": "22",
                 "keyFile": "",
-                "cloudBackup": false,
-                "UserManager": false,
-                "cleanUMsessions": false
+                "cloudBackup": False,
+                "UserManager": False,
+                "cleanUMsessions": False
             },
             {
                 "Name": "Name2",
@@ -42,9 +42,9 @@ def generate_default_config():
                 "Password": "",
                 "Port": "22",
                 "keyFile": "",
-                "cloudBackup": false,
-                "UserManager": false,
-                "cleanUMsessions": false
+                "cloudBackup": False,
+                "UserManager": False,
+                "cleanUMsessions": False
             }
         ]
     }
@@ -62,10 +62,11 @@ def send_to_telegram(subject,message):
         "chat_id": f"{TELEGRAM_CHATID}",
         "text": f"[{os.uname().nodename}] {SCRIPT_NAME}:\n{subject}\n{message}",
     }
-    response = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",headers=headers,json=data)
-    if response.status_code != 200:
-        err = response.json()
-        logging.error(f"Error while sending message to Telegram: {err}")
+    if not any(important in [None, "", "None"] for important in [f"{TELEGRAM_CHATID}", f"{TELEGRAM_TOKEN}"]):
+        response = requests.post(f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage",headers=headers,json=data)
+        if response.status_code != 200:
+            err = response.json()
+            logging.error(f"Error while sending message to Telegram: {err}")
 
 def load_config():
     #main initialization phase starts here
@@ -264,7 +265,15 @@ def main():
     print(text)
     logging.info(text)
     send_to_telegram("☕Backup job started","")
-    check_pid()  
+    check_pid()
+    #check is the root backup folder accessable.
+    if not os.path.exists(BCKP_FOLDER):
+        text = f"Root folder for backups {BCKP_FOLDER} is not accessable! Interrupting!"
+        print(text)
+        logging.info(text)
+        send_to_telegram("🚒Error:",text)
+        interrupt_job()
+    #start of main function - fetching list and makeing backups
     for device in BCKP_LIST:
         #check all necessary fileds are present and have their values
         if any(device.get(field) in [None, "", "None"] for field in ["Name", "Host", "User", "Port"]) or (not device.get('Password') and not device.get('keyFile')):
