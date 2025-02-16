@@ -246,7 +246,7 @@ def step2_main_job(name,host,port,user,auth_item,usermanager,cloudbackup,cleanUM
         sftp.close()
         return
     except Exception as msg:
-        text = f"Error while SSH connection to Name={name}, Host={host}, Port={port}, User={user}, Password={auth_item}, UserManager={usermanager}. Error: {msg}"
+        text = f"Error while SSH connection to Name={name}, Host={host}, Port={port}, User={user}, authItem={auth_item}, UserManager={usermanager}. Error: {msg}"
         if str(msg) == "Private key file is encrypted":
             text += " P.S.Probably wrong keyfile or wrong username is set.Check auth settings in both sides.Or your keyfile is really need the key to decrypt before use."
         if str(msg) == "private key file is encrypted":
