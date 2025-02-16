@@ -9,6 +9,8 @@ import requests
 from datetime import datetime
 import paramiko
 import time
+from cryptography.hazmat.primitives import serialization as crypto_serialization
+from cryptography.hazmat.primitives.asymmetric import ed25519, dsa, rsa, ec
 
 CONFIG_FILE = os.path.expanduser(os.path.splitext(os.path.basename(__file__))[0]+".json")
 SCRIPT_NAME = os.path.splitext(os.path.basename(__file__))[0]
@@ -177,7 +179,31 @@ def step2_main_job(name,host,port,user,auth_item,usermanager,cloudbackup,cleanUM
             text = f"Auth type: key file"
             logging.info(text)
             print(text)
-            private_key = paramiko.RSAKey(filename=auth_item)
+            private_key = ""
+            file_bytes = b""
+            with open(auth_item, 'rb') as keyFile:
+                file_bytes = keyFile.read()
+            key = crypto_serialization.load_ssh_private_key(file_bytes,password=None)
+            if isinstance(key, rsa.RSAPrivateKey):
+                text = f"Private key type is RSA"
+                logging.info(text)
+                print(text)
+                private_key = paramiko.RSAKey(filename=auth_item)
+            elif isinstance(key, ed25519.Ed25519PrivateKey):
+                text = f"Private key type is ED25519"
+                logging.info(text)
+                print(text)
+                private_key = paramiko.Ed25519Key(filename=auth_item)
+            elif isinstance(key, ec.EllipticCurvePrivateKey):
+                text = f"Private key type is ECDSA"
+                logging.info(text)
+                print(text)
+                private_key = paramiko.ECDSAKey(filename=auth_item)
+            elif isinstance(key, dsa.DSAPrivateKey):
+                text = f"Private key type is DSA"
+                logging.info(text)
+                print(text)
+                private_key = paramiko.DSSKey(filename=auth_item)
             client.connect(hostname=host, username=user, port=port, pkey=private_key)
         text = f"Creating backup files..."
         logging.info(text)
@@ -229,7 +255,7 @@ def step2_main_job(name,host,port,user,auth_item,usermanager,cloudbackup,cleanUM
             print(text)
             logging.info(text)
             file = os.path.join(fullBackupPath,"userman.db")
-            sftp.get(f"/userman.db", file)
+            sftp.get(f"userman.db", file)
             text = f"Downloading um5 raw files..."
             print(text)
             logging.info(text)
